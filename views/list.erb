@@ -1,12 +1,12 @@
-<section id="todos" class="<%= list_class(@list) %>">
+<section id="todos" class="<%= list_class(@list) || no_todos(@todos) %>">
   <header>
     <h2><%= @list[:name] %></h2>
     <ul>
-        <li>
-          <form action="/lists/<%= @num %>/complete_all" method="post">
-            <button class="check" type="submit">Complete All</button>
-          </form>
-        </li>
+      <li class="complete">
+        <form action="/lists/<%= @num %>/complete_all" method="post">
+          <button class="check" type="submit">Complete All</button>
+        </form>
+      </li>
       <li>
         <a class="edit" href="/lists/<%= @num %>/edit">Edit List</a>
       </li>
@@ -14,7 +14,7 @@
   </header>
   <ul>
     <% sort_todos(@todos) do |todo, ind| %>
-      <li class="<%= 'complete' if todo[:completed] %>">
+      <li class="<%= ('complete' if todo[:completed]) %>">
         
         <form action="/lists/<%= @num %>/todos/<%= ind %>" method="post" class="check">
           <input type="hidden" name="completed" value="<%= !todo[:completed] %>">

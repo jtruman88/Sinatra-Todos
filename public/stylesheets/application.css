@@ -302,7 +302,8 @@ form fieldset.actions a:hover {
 }
 
 #todos header ul button:before {
-  display: inline-block;
+  display: inline-block;0..3
+  
   width: 24px;
   height: 24px;
   margin: 0 7px 0 0;

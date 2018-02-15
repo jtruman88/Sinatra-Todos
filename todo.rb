@@ -1,5 +1,5 @@
 require 'sinatra'
-require 'sinatra/reloader'
+require 'sinatra/reloader' if development?
 require 'sinatra/content_for'
 require 'tilt/erubis'
 
@@ -8,13 +8,17 @@ configure do
   set :session_secret, 'secret'
 end
 
+configure do
+  set :erb, :escape_html => true
+end
+
 before do
   session[:lists] ||= []
 end
 
 helpers do
   def completed?(list)
-    list[:todos].all? { |todo| todo[:completed] } && list[:todos].count >= 1
+    list[:todos].count >= 1 && list[:todos].all? { |todo| todo[:completed] }
   end
   
   def completed_ratio(list)
@@ -26,6 +30,10 @@ helpers do
   
   def list_class(list)
     'complete' if completed?(list)
+  end
+  
+  def no_todos(todos)
+    'complete' if todos.count == 0
   end
   
   def sort_lists(lists, &block)
