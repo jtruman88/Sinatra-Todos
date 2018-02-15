@@ -1,12 +1,14 @@
 <ul id="lists">
-  <% @lists.each do |list| %>
-    <li>
-      <a href="#">
+  <% sort_lists(@lists) do |list, ind| %>
+    <li class="<%= list_class(list) %>">
+      <a href="/lists/<%= ind %>">
         <h2><%= list[:name] %></h2>
-        <p><%= list[:todos].size %></p>
+        <p><%= completed_ratio(list) %></p>
       </a>
     </li>
   <% end %>
 </ul>
 
-<a href="/lists/new">New List</a>
+<% content_for :header_links do %>
+  <a class="add" href="/lists/new">New List</a>
+<% end %>
