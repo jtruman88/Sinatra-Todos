@@ -75,7 +75,7 @@ end
 # Return an error if todo name is invalid. Return nil if valid.
 def check_todo_error(todo)
   unless (1..100).cover?(todo.length)
-    return "Todo must be between 1 and 100 characters."
+    'Todo must be between 1 and 100 characters.'
   end
 end
 
@@ -167,7 +167,7 @@ end
 post '/lists/:list_num/todos' do
   @num = params[:list_num].to_i
   todo = params[:todo].strip
-  @list = session[:lists][@num][:name]
+  @list = session[:lists][@num]
   @todos = session[:lists][@num][:todos]
   
   error = check_todo_error(todo)
@@ -175,7 +175,7 @@ post '/lists/:list_num/todos' do
     session[:error] = error
     erb :list, layout: :layout
   else
-    session[:lists][@num][:todos] << { name: todo, completed: false }
+    @todos << { name: todo, completed: false }
     session[:success] = 'The todo was added.'
     redirect "/lists/#{@num}"
   end
