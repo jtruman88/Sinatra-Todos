@@ -2,7 +2,7 @@
   <header>
     <h2><%= @list[:name] %></h2>
     <ul>
-      <li class="complete">
+      <li>
         <form action="/lists/<%= @num %>/complete_all" method="post">
           <button class="check" type="submit">Complete All</button>
         </form>

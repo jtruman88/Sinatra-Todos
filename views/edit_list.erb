@@ -3,7 +3,7 @@
     <h2>Editing '<%= @list[:name] %>'</h2>
     <ul>
       <li>
-        <form action="/lists/<%= @num %>/destory" method="post">
+        <form class="delete" action="/lists/<%= @num %>/destory" method="post">
           <button type="submit" class="delete">Delete List</button>
         </form>
       </li>
