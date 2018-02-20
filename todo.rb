@@ -40,11 +40,11 @@ helpers do
     incomplete = {}
     complete = {}
     
-    lists.each_with_index do |list, ind|
+    lists.each do |list|
       if completed?(list)
-        complete[list] = ind
+        complete[list] = list[:id]
       else
-        incomplete[list] = ind
+        incomplete[list] = list[:id]
       end
     end
     
@@ -56,11 +56,11 @@ helpers do
     incomplete = {}
     complete = {}
     
-    todos.each_with_index do |todo, ind|
+    todos.each do |todo|
       if todo[:completed]
-        complete[todo] = ind
+        complete[todo] = todo[:id]
       else
-        incomplete[todo] = ind
+        incomplete[todo] = todo[:id]
       end
     end
     
@@ -91,13 +91,25 @@ get '/' do
   redirect '/lists'
 end
 
-# Verifies a valid list index is given
-def load_list(index)
-  list = session[:lists][index] if index && session[:lists][index]
+# Verifies a valid list id is given
+def load_list(id)
+  list = session[:lists].find { |list| list[:id] == id }
   return list if list
   
   session[:error] = "The specified list was not found."
   redirect '/lists'
+end
+
+# Gives a new todo item an id
+def next_todo_id(todos)
+  max = todos.map { |todo| todo[:id] }.max || 0
+  max + 1
+end
+
+# Gives a new list an id
+def next_list_id(lists)
+  max = lists.map { |list| list[:id] }.max || 0
+  max + 1
 end
 
 # GET   /lists                    -> view all lists
@@ -132,7 +144,8 @@ post '/lists' do
     session[:error] = error
     erb :new_list, layout: :layout
   else
-    session[:lists] << { name: list_name, todos: [] }
+    id = next_list_id(session[:lists])
+    session[:lists] << { name: list_name, todos: [], id: id }
     session[:success] = 'The list has been successfully created.'
     redirect '/lists'
   end
@@ -142,7 +155,7 @@ end
 get '/lists/:number' do
   @num = params[:number].to_i
   @list = load_list(@num)
-  @todos = session[:lists][@num][:todos]
+  @todos = @list[:todos]
   
   erb :list, layout: :layout
 end
@@ -166,7 +179,7 @@ post '/lists/:number' do
     session[:error] = error
     erb :edit_list, layout: :layout
   else
-    session[:lists][@num][:name] = list_name
+    @list[:name] = list_name
     session[:success] = 'The list has been updated.'
     redirect "/lists/#{@num}"
   end
@@ -175,9 +188,13 @@ end
 # Delete an existing list
 post '/lists/:number/destory' do
   num = params[:number].to_i
-  session[:lists].delete_at(num)
-  session[:success] = "The list has been deleted."
-  redirect "/lists"
+  session[:lists].reject! { |list| list[:id] == num }
+  if env['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest'
+    '/lists'
+  else
+    session[:success] = "The list has been deleted."
+    redirect "/lists"
+  end
 end
 
 # Add a todo to a list
@@ -185,14 +202,15 @@ post '/lists/:list_num/todos' do
   @num = params[:list_num].to_i
   todo = params[:todo].strip
   @list = load_list(@num)
-  @todos = session[:lists][@num][:todos]
+  @todos = @list[:todos]
   
   error = check_todo_error(todo)
   if error
     session[:error] = error
     erb :list, layout: :layout
   else
-    @todos << { name: todo, completed: false }
+    id = next_todo_id(@todos)
+    @todos << { name: todo, completed: false, id: id }
     session[:success] = 'The todo was added.'
     redirect "/lists/#{@num}"
   end
@@ -204,9 +222,13 @@ post '/lists/:list_num/todos/:todo_num/destroy' do
   list_num = params[:list_num].to_i
   list = load_list(list_num)
   
-  list[:todos].delete_at(todo_num)
-  session[:success] = 'The todo has been deleted.'
-  redirect "/lists/#{list_num}"
+  list[:todos].reject! { |todo| todo[:id] == todo_num }
+  if env['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest'
+    status 204
+  else
+    session[:success] = 'The todo has been deleted.'
+    redirect "/lists/#{list_num}"
+  end
 end
 
 # Update status of todo
@@ -214,7 +236,7 @@ post '/lists/:list_num/todos/:todo_num' do
   list_num = params[:list_num].to_i
   todo_num = params[:todo_num].to_i
   list = load_list(list_num)
-  todo = list[:todos][todo_num]
+  todo = list[:todos].find { |todo| todo[:id] == todo_num }
   
   is_completed = params[:completed] == 'true'
   todo[:completed] = is_completed
